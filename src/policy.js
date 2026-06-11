@@ -12,7 +12,9 @@ function shouldSend(eventType, notify) {
       return notify.onAttention === true;
     case 'danger':
       return notify.onDanger === true;
-    // info / drift / failure / permission_denied / possible_permission_wait 默认静默
+    case 'failure':
+      return notify.onFailure === true;
+    // info / drift / permission_denied / possible_permission_wait 默认静默
     default:
       return false;
   }

@@ -14,7 +14,9 @@ ClaudeBuzz 让它在需要你的那一刻**主动震你手腕**，还告诉你�
 - **只在该打扰时打扰**：默认**只在需要你授权时**推送，任务进度、普通事件一律静默。
 - **带真实命令详情**：通知正文直接显示它要执行的命令（`Bash: git push…` / `rm -rf…`），扫一眼就知道该不该放行。
 - **iOS 与安卓都支持**：iPhone 走 [Bark](https://github.com/Finb/Bark)（→ 苹果 APNs → Apple Watch）；安卓走 [ntfy](https://ntfy.sh)（开源、有官方安卓 App、可自托管）。
-- **话术可换**：内置 `coolie`(牛马版) / `cute`(可爱版) / `boss`(总裁版) / `emperor` / `palace`，一条命令切换。
+- **话术可换**：内置 11 种语气——`coolie`(牛马) / `cute`(可爱) / `boss`(总裁) / `emperor`(皇上) / `palace`(甄嬛) / `gentle`(温柔) / `zen`(佛系) / `military`(军令) / `mom`(老妈) / `en`(English) / `off`，一条命令切换。
+- **图标可换**：内置预设 `robot-pink`(默认) / `robot-gray` / `claude` / `bell`，也可填任意图片 URL。
+- **通知类型可配**：`permission`(默认开) / `done` / `attention` / `danger` / `failure`，按需开关。
 - **跨平台 · 零依赖**：纯 Node.js 内置模块，Windows / macOS / Linux 通吃，原生 UTF-8，无 GBK 乱码坑。
 
 ## 🚀 安装（两条命令）
@@ -39,10 +41,13 @@ ClaudeBuzz 让它在需要你的那一刻**主动震你手腕**，还告诉你�
 不想用 `/notify-setup` 也可以直接用自带 CLI：
 
 ```bash
-node bin/claudebuzz.js config bark "https://api.day.app/你的KEY/"
-node bin/claudebuzz.js test          # 发测试推送
-node bin/claudebuzz.js persona cute  # 切换话术
-node bin/claudebuzz.js doctor        # 健康检查
+node bin/claudebuzz.js config bark "https://api.day.app/你的KEY/"  # iPhone
+node bin/claudebuzz.js config ntfy "claudebuzz-x7k9q2"            # 安卓
+node bin/claudebuzz.js test           # 发测试推送
+node bin/claudebuzz.js persona cute   # 切换话术（11 种）
+node bin/claudebuzz.js icon claude    # 切换图标
+node bin/claudebuzz.js notify done on # 开启“任务完成”通知
+node bin/claudebuzz.js doctor         # 健康检查
 ```
 
 ## ⚙️ 配置文件

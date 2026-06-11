@@ -3,6 +3,7 @@
 // 文档：https://docs.ntfy.sh/publish/#publish-as-json
 const https = require('https');
 const http = require('http');
+const { resolveIcon } = require('../icons');
 
 // ch: { topic, server, icon, priority, token? }
 function send(ch, msg) {
@@ -10,12 +11,13 @@ function send(ch, msg) {
     const topic = (ch && ch.topic) || '';
     if (!topic) return resolve({ ok: false, info: 'ntfy topic 未配置' });
     const server = (ch.server || 'https://ntfy.sh').replace(/\/+$/, '');
+    const icon = resolveIcon(ch.icon);
     const payload = JSON.stringify({
       topic,
       title: msg.title,
       message: msg.body,
       priority: ch.priority || 4,
-      ...(ch.icon ? { icon: ch.icon } : {}),
+      ...(icon ? { icon } : {}),
     });
     const lib = server.startsWith('http://') ? http : https;
     try {

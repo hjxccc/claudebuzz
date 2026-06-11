@@ -3,6 +3,7 @@
 // 移植自 agentwatch/notifier.py send_bark。
 const https = require('https');
 const http = require('http');
+const { resolveIcon } = require('../icons');
 
 function enc(s) { return encodeURIComponent(String(s == null ? '' : s)); }
 
@@ -18,7 +19,8 @@ function send(ch, msg) {
     const group = ch.group || 'ClaudeCode';
     const level = ch.level || 'timeSensitive';
     let url = `${server}/${key}/${enc(msg.title)}/${enc(msg.body)}?group=${enc(group)}&level=${enc(level)}`;
-    if (ch.icon) url += `&icon=${enc(ch.icon)}`;
+    const icon = resolveIcon(ch.icon);
+    if (icon) url += `&icon=${enc(icon)}`;
 
     const lib = url.startsWith('http://') ? http : https;
     try {

@@ -17,7 +17,7 @@ const DEFAULTS = {
       type: 'bark',
       key: '',
       server: 'https://api.day.app',
-      icon: DEFAULT_ICON,
+      icon: 'robot-pink', // 预设名，发送时由 src/icons.js 解析为 URL
       group: 'ClaudeCode',
       level: 'timeSensitive',
     },
@@ -28,6 +28,7 @@ const DEFAULTS = {
     onTaskDone: false,
     onAttention: false,
     onDanger: false,
+    onFailure: false,
   },
   persona: 'coolie',
   detailMaxLen: 45,
