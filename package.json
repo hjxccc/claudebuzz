@@ -1,0 +1,16 @@
+{
+  "name": "claudebuzz",
+  "version": "1.0.0",
+  "description": "Claude Code 卡住等授权时，主动把通知推到你的手机 / Apple Watch。零配置 Claude Code 插件，开箱即用。",
+  "bin": {
+    "claudebuzz": "bin/claudebuzz.js"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "keywords": ["claude-code", "claude", "notification", "bark", "apple-watch", "hook", "plugin"],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
+}

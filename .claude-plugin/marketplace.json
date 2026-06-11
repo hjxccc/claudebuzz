@@ -1,0 +1,11 @@
+{
+  "name": "claudebuzz",
+  "owner": { "name": "hjxccc" },
+  "plugins": [
+    {
+      "name": "claudebuzz",
+      "source": "./",
+      "description": "Claude Code 卡住等授权时主动推送到手机 / Apple Watch。零配置、跨平台、走苹果官方推送。"
+    }
+  ]
+}

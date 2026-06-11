@@ -1,0 +1,7 @@
+{
+  "session_id": "demo",
+  "hook_event_name": "Notification",
+  "notification_type": "permission",
+  "message": "Claude needs your permission to use Bash",
+  "transcript_path": ""
+}

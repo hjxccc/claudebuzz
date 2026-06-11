@@ -1,0 +1,9 @@
+{
+  "name": "claudebuzz",
+  "version": "1.0.0",
+  "description": "Claude Code 卡住等授权时，主动把通知推到你的手机 / Apple Watch。零配置、跨平台、走苹果官方推送。",
+  "author": { "name": "hjxccc" },
+  "license": "MIT",
+  "hooks": "./hooks/hooks.json",
+  "commands": "./commands"
+}

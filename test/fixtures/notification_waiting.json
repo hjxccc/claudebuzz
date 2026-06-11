@@ -1,0 +1,7 @@
+{
+  "session_id": "demo",
+  "hook_event_name": "Notification",
+  "notification_type": "idle",
+  "message": "Claude is waiting for your input",
+  "transcript_path": ""
+}

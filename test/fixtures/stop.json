@@ -1,0 +1,7 @@
+{
+  "session_id": "demo",
+  "hook_event_name": "Stop",
+  "stop_hook_active": false,
+  "transcript_path": "",
+  "last_assistant_message": "已完成示例任务：新增了登录接口、补了 3 个单元测试，全部通过。"
+}

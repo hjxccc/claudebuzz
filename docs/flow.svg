@@ -1,0 +1,102 @@
+<svg viewBox="0 0 1000 580" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      text { font-family: 'Noto Sans SC','PingFang SC','Microsoft YaHei','JetBrains Mono',sans-serif; }
+      .name { font-size: 15px; font-weight: 700; fill: #f1f5f9; }
+      .sub  { font-size: 10px; font-weight: 400; fill: #94a3b8; }
+      .alabel { font-size: 10px; font-weight: 600; fill: #fb923c; }
+      .num { font-size: 11px; font-weight: 700; fill: #0f172a; }
+    </style>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5"/>
+    </pattern>
+    <marker id="arrow" markerWidth="11" markerHeight="8" refX="9" refY="4" orient="auto">
+      <polygon points="0 0, 11 4, 0 8" fill="#fb923c"/>
+    </marker>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="7" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="100%" height="100%" fill="#0f172a"/>
+  <rect width="100%" height="100%" fill="url(#grid)"/>
+
+  <!-- Title -->
+  <text x="60" y="44" class="name" font-size="20">ClaudeBuzz · 让 Claude Code 卡住时主动震你手腕</text>
+  <text x="60" y="66" class="sub" font-size="11">事件驱动 · 走苹果官方 APNs 推送通道</text>
+
+  <!-- ================= Arrows (drawn first, under boxes) ================= -->
+  <!-- top row L->R -->
+  <line x1="230" y1="146" x2="288" y2="146" stroke="#fb923c" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="460" y1="146" x2="518" y2="146" stroke="#fb923c" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="690" y1="146" x2="748" y2="146" stroke="#fb923c" stroke-width="2" marker-end="url(#arrow)"/>
+  <!-- elbow ④Bark -> ⑤APNs (down) -->
+  <path d="M 835 182 L 835 378" fill="none" stroke="#fb923c" stroke-width="2" marker-end="url(#arrow)"/>
+  <!-- bottom row R->L -->
+  <line x1="748" y1="416" x2="692" y2="416" stroke="#fb923c" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="518" y1="416" x2="462" y2="416" stroke="#fb923c" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- arrow labels -->
+  <text x="259" y="136" class="alabel" text-anchor="middle">事件触发</text>
+  <text x="489" y="136" class="alabel" text-anchor="middle">stdin 喂数据</text>
+  <text x="719" y="136" class="alabel" text-anchor="middle">HTTPS GET</text>
+  <text x="845" y="290" class="alabel">苹果官方推送</text>
+  <text x="720" y="406" class="alabel" text-anchor="middle">APNs 长连接</text>
+  <text x="490" y="406" class="alabel" text-anchor="middle">系统同步</text>
+
+  <!-- ================= TOP ROW ================= -->
+  <!-- ① Claude Code -->
+  <rect x="60" y="110" width="170" height="72" rx="8" fill="#0f172a"/>
+  <rect x="60" y="110" width="170" height="72" rx="8" fill="rgba(217,119,87,0.20)" stroke="#D97757" stroke-width="1.8"/>
+  <circle cx="78" cy="128" r="9" fill="#D97757"/><text x="78" y="132" class="num" text-anchor="middle">1</text>
+  <text x="145" y="150" class="name" text-anchor="middle">Claude Code</text>
+  <text x="145" y="170" class="sub" text-anchor="middle">卡住 · 等待授权</text>
+
+  <!-- ② Hook -->
+  <rect x="290" y="110" width="170" height="72" rx="8" fill="#0f172a"/>
+  <rect x="290" y="110" width="170" height="72" rx="8" fill="rgba(120,53,15,0.30)" stroke="#fbbf24" stroke-width="1.8"/>
+  <circle cx="308" cy="128" r="9" fill="#fbbf24"/><text x="308" y="132" class="num" text-anchor="middle">2</text>
+  <text x="375" y="150" class="name" text-anchor="middle">Hook 钩子</text>
+  <text x="375" y="170" class="sub" text-anchor="middle">事件触发 · 不轮询</text>
+
+  <!-- ③ AgentWatch -->
+  <rect x="520" y="110" width="170" height="72" rx="8" fill="#0f172a"/>
+  <rect x="520" y="110" width="170" height="72" rx="8" fill="rgba(6,78,59,0.40)" stroke="#34d399" stroke-width="1.8"/>
+  <circle cx="538" cy="128" r="9" fill="#34d399"/><text x="538" y="132" class="num" text-anchor="middle">3</text>
+  <text x="605" y="150" class="name" text-anchor="middle">ClaudeBuzz</text>
+  <text x="605" y="170" class="sub" text-anchor="middle">解析 · 过滤 · 组装</text>
+
+  <!-- ④ Bark -->
+  <rect x="750" y="110" width="170" height="72" rx="8" fill="#0f172a"/>
+  <rect x="750" y="110" width="170" height="72" rx="8" fill="rgba(251,146,60,0.20)" stroke="#fb923c" stroke-width="1.8"/>
+  <circle cx="768" cy="128" r="9" fill="#fb923c"/><text x="768" y="132" class="num" text-anchor="middle">4</text>
+  <text x="835" y="150" class="name" text-anchor="middle">Bark 服务器</text>
+  <text x="835" y="170" class="sub" text-anchor="middle">推送中转</text>
+
+  <!-- ================= BOTTOM ROW ================= -->
+  <!-- ⑤ APNs (highlighted) -->
+  <rect x="748" y="376" width="174" height="80" rx="10" fill="rgba(217,119,87,0.45)" stroke="#ffb499" stroke-width="2.4" filter="url(#glow)"/>
+  <circle cx="768" cy="396" r="9" fill="#ffb499"/><text x="768" y="400" class="num" text-anchor="middle">5</text>
+  <text x="838" y="414" class="name" text-anchor="middle" fill="#fff">苹果 APNs</text>
+  <text x="838" y="433" class="sub" text-anchor="middle" fill="#ffe3d6">官方推送网关</text>
+  <rect x="788" y="440" width="100" height="16" rx="8" fill="#D97757"/>
+  <text x="838" y="452" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">Apple 官方通道</text>
+
+  <!-- ⑥ iPhone -->
+  <rect x="520" y="380" width="170" height="72" rx="8" fill="#0f172a"/>
+  <rect x="520" y="380" width="170" height="72" rx="8" fill="rgba(59,130,246,0.25)" stroke="#60a5fa" stroke-width="1.8"/>
+  <circle cx="538" cy="398" r="9" fill="#60a5fa"/><text x="538" y="402" class="num" text-anchor="middle">6</text>
+  <text x="605" y="420" class="name" text-anchor="middle">iPhone</text>
+  <text x="605" y="440" class="sub" text-anchor="middle">收到推送</text>
+
+  <!-- ⑦ Apple Watch -->
+  <rect x="290" y="380" width="170" height="72" rx="8" fill="#0f172a"/>
+  <rect x="290" y="380" width="170" height="72" rx="8" fill="rgba(217,119,87,0.20)" stroke="#D97757" stroke-width="1.8"/>
+  <circle cx="308" cy="398" r="9" fill="#D97757"/><text x="308" y="402" class="num" text-anchor="middle">7</text>
+  <text x="375" y="416" class="name" text-anchor="middle">Apple Watch</text>
+  <text x="375" y="437" class="sub" text-anchor="middle">震动 · 显示命令</text>
+
+  <!-- caption -->
+  <text x="375" y="500" text-anchor="middle" font-size="12" font-weight="600" fill="#D97757">“喂！牛马！过来允许一下” —— 手腕一震，扫一眼就知道它卡在哪条命令</text>
+</svg>
