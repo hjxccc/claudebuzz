@@ -4,17 +4,20 @@
 
 const { loadConfig } = require('./config');
 const { classify, isDangerText } = require('./classify');
-const { shouldSend } = require('./policy');
+const { shouldSend, isQuietNow, nowMinutes } = require('./policy');
 const { extractDetail } = require('./detail');
 const { buildMessage } = require('./message');
 const { isDuplicate, appendLog } = require('./store');
 const channels = require('./channels');
 
-// 纯函数：便于单测（不联网、不读写状态）。
-function processEvent(eventName, raw, cfg) {
+// 纯函数：便于单测（不联网、不读写状态）。now 可注入分钟数，缺省取真实时间。
+function processEvent(eventName, raw, cfg, now) {
   raw = raw || {};
   const eventType = classify(eventName, raw);
-  const willSend = shouldSend(eventType, cfg.notify);
+  const nowMin = typeof now === 'number' ? now : nowMinutes();
+  const enabled = cfg.enabled !== false;       // 全局总开关，false=完全静默
+  const quiet = isQuietNow(cfg.quietHours, nowMin); // 勿扰时段
+  const willSend = enabled && !quiet && shouldSend(eventType, cfg.notify);
   const detail = extractDetail(eventType, raw);
   // 危险判定看命令文本：哪怕是“请求允许执行 rm -rf”这类 permission 事件，也升级推送。
   const isDanger = eventType === 'danger' || isDangerText(detail);
@@ -27,7 +30,7 @@ function processEvent(eventName, raw, cfg) {
     dangerCue: cfg.danger,
   });
   const dedupKey = `${eventType}|${raw.session_id || ''}|${String(detail).slice(0, 80)}`;
-  return { eventName, eventType, willSend, detail, msg, dedupKey };
+  return { eventName, eventType, willSend, detail, msg, dedupKey, enabled, quiet };
 }
 
 function readStdin() {
@@ -80,6 +83,10 @@ async function main() {
         notified = results.some((x) => x.ok);
         if (!notified) skipped = 'send_failed';
       }
+    } else if (!r.enabled) {
+      skipped = 'disabled';
+    } else if (r.quiet) {
+      skipped = 'quiet_hours';
     } else {
       skipped = 'policy';
     }

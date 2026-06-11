@@ -59,6 +59,30 @@ test('详情超长会被截断到 detailMaxLen', () => {
   assert.match(r.msg.body, /…$/);
 });
 
+test('全局总开关：enabled=false 时即使是 permission 也不推', () => {
+  const off = Object.assign({}, cfg, { enabled: false });
+  const r = processEvent('PermissionRequest', { tool_name: 'Bash', tool_input: { command: 'ls' } }, off, 600);
+  assert.equal(r.enabled, false);
+  assert.equal(r.willSend, false, '全局静音时不推');
+});
+
+test('勿扰时段：跨夜 23:00–08:00，凌晨 2 点静默、上午 10 点恢复', () => {
+  const quiet = Object.assign({}, cfg, { quietHours: { enabled: true, start: '23:00', end: '08:00' } });
+  const payload = { tool_name: 'Bash', tool_input: { command: 'ls' } };
+  const at2am = processEvent('PermissionRequest', payload, quiet, 2 * 60);   // 02:00
+  const at10am = processEvent('PermissionRequest', payload, quiet, 10 * 60); // 10:00
+  assert.equal(at2am.quiet, true);
+  assert.equal(at2am.willSend, false, '勿扰时段内不推');
+  assert.equal(at10am.quiet, false);
+  assert.equal(at10am.willSend, true, '过点自动恢复推送');
+});
+
+test('勿扰时段未开启时不影响推送', () => {
+  const r = processEvent('PermissionRequest', { tool_name: 'Bash', tool_input: { command: 'ls' } }, cfg, 2 * 60);
+  assert.equal(r.quiet, false);
+  assert.equal(r.willSend, true);
+});
+
 test('去重：同 key 在窗口内第二次判定为重复', () => {
   // 唯一 key + 唯一时间基准，避免持久化 state 在多次运行间互相污染。
   const now = Date.now();

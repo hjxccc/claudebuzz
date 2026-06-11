@@ -6,6 +6,7 @@
 const { loadConfig, saveConfig, CONFIG_FILE } = require('../src/config');
 const { buildMessage } = require('../src/message');
 const { validThemes, THEME_NAMES } = require('../src/personas');
+const { parseHM, isQuietNow, nowMinutes } = require('../src/policy');
 const { presetNames } = require('../src/icons');
 const channels = require('../src/channels');
 
@@ -161,6 +162,38 @@ function cmdNotify(type, state) {
   console.log(`✅ ${type} 通知已${state === 'on' ? '开启' : '关闭'}`);
 }
 
+function cmdEnable(on) {
+  const cfg = loadConfig();
+  cfg.enabled = on;
+  saveConfig(cfg);
+  console.log(on ? '✅ ClaudeBuzz 已开启（恢复推送）' : '🔇 ClaudeBuzz 已全局静音（claudebuzz on 恢复）');
+}
+
+function cmdQuiet(start, end) {
+  const cfg = loadConfig();
+  cfg.quietHours = cfg.quietHours || {};
+  if (!start) {
+    const q = cfg.quietHours;
+    console.log(q.enabled ? `当前勿扰时段：${q.start} – ${q.end}（已开启）` : '勿扰时段：未开启');
+    console.log('用法：claudebuzz quiet 23:00 08:00   |   claudebuzz quiet off');
+    return;
+  }
+  if (start === 'off') {
+    cfg.quietHours.enabled = false;
+    saveConfig(cfg);
+    console.log('✅ 勿扰时段已关闭');
+    return;
+  }
+  if (parseHM(start) == null || parseHM(end) == null) {
+    console.error('❌ 时间格式应为 HH:MM，如：claudebuzz quiet 23:00 08:00');
+    process.exit(1);
+  }
+  cfg.quietHours = { enabled: true, start, end };
+  saveConfig(cfg);
+  const cross = parseHM(start) > parseHM(end) ? '（跨夜）' : '';
+  console.log(`✅ 勿扰时段已设为 ${start} – ${end}${cross}，该时段内不推送，过点自动恢复。`);
+}
+
 function channelLabel(ch) {
   if (ch.type === 'bark') return `bark   key=${ch.key ? maskKey(ch.key) : '⚠️未设置'} @ ${ch.server}`;
   if (ch.type === 'pushdeer') return `pushdeer key=${ch.key ? maskKey(ch.key) : '⚠️未设置'} @ ${ch.server || 'https://api2.pushdeer.com'}`;
@@ -181,6 +214,11 @@ async function cmdDoctor() {
   console.log(`  配置文件 : ${CONFIG_FILE}`);
   console.log(`  Node     : ${process.version}`);
   console.log(`  persona  : ${cfg.persona}（${THEME_NAMES[cfg.persona] || cfg.persona}）`);
+  const globalOn = cfg.enabled !== false;
+  const q = cfg.quietHours || {};
+  const quieting = isQuietNow(q, nowMinutes());
+  console.log(`  总开关   : ${globalOn ? '✅ 开启' : '🔇 已全局静音（claudebuzz on 恢复）'}`);
+  console.log(`  勿扰时段 : ${q.enabled ? `${q.start} – ${q.end}${quieting ? '  ⏳当前正在勿扰中' : ''}` : '未开启'}`);
   const on = Object.entries(NOTIFY_MAP).filter(([, f]) => cfg.notify[f]).map(([k]) => k);
   console.log(`  推送类型 : ${on.length ? on.join(', ') : '(全关)'}`);
   if (!list.length) console.log('  渠道     : ⚠️ 未配置任何渠道');
@@ -204,6 +242,8 @@ function usage() {
   claudebuzz persona [主题]                    查看/切换话术
   claudebuzz icon [预设名或URL]                查看/切换图标（${presetNames().join('/')}）
   claudebuzz notify [类型] [on|off]            查看/开关通知类型
+  claudebuzz on | off                          全局开启 / 静音（总开关）
+  claudebuzz quiet <起> <止> | quiet off       勿扰时段（如 quiet 23:00 08:00，支持跨夜）
   claudebuzz doctor                            健康检查
 `);
 }
@@ -218,6 +258,9 @@ async function main() {
     else if (cmd === 'persona') cmdPersona(a);
     else if (cmd === 'icon') cmdIcon(a);
     else if (cmd === 'notify') cmdNotify(a, b);
+    else if (cmd === 'on') cmdEnable(true);
+    else if (cmd === 'off') cmdEnable(false);
+    else if (cmd === 'quiet') cmdQuiet(a, b);
     else if (cmd === 'doctor') await cmdDoctor();
     else usage();
   } catch (e) {

@@ -12,6 +12,9 @@ const DEFAULT_ICON =
   'https://cdn.jsdelivr.net/gh/hjxccc/agentwatch-assets@main/claude_robot_pink.png';
 
 const DEFAULTS = {
+  enabled: true, // 全局总开关：false = 完全静默（claudebuzz off/on 切换）
+  // 勿扰时段：到点自动不推、过点自动恢复。支持跨夜（start>end，如 23:00–08:00）。
+  quietHours: { enabled: false, start: '23:00', end: '08:00' },
   channels: [
     {
       type: 'bark',

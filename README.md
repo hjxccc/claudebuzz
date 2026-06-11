@@ -12,6 +12,7 @@ ClaudeBuzz 让它在需要你的那一刻**主动震你手腕**，还告诉你�
 
 - **零配置安装**：作为 Claude Code 插件分发，`/plugin install` 后 hook 自动注册，**无需手动改 `settings.json`**。
 - **只在该打扰时打扰**：默认**只在需要你授权时**推送，任务进度、普通事件一律静默。
+- **随时一键开关 + 勿扰时段**：埋头干活/休假时 `claudebuzz off` 全局静音；设个 `quiet 23:00 08:00` 半夜自动不吵你、到点自动恢复（支持跨夜）。
 - **带真实命令详情**：通知正文直接显示它要执行的命令（`Bash: git push…` / `rm -rf…`），扫一眼就知道该不该放行。
 - **危险命令升级推送**：检测到 `rm -rf` / `git push --force` / `drop table` 等高危操作，自动升级为 `critical`（突破勿扰/静音）+ 重复响铃 + 🚨 专属图标，危险操作绝不漏。
 - **分事件铃声**：等授权 / 任务完成 / 危险 各用不同提示音（Bark `sound`），一耳朵分清是哪类事件。
@@ -50,7 +51,11 @@ node bin/claudebuzz.js test           # 发测试推送
 node bin/claudebuzz.js persona cute   # 切换话术（11 种）
 node bin/claudebuzz.js icon claude    # 切换图标
 node bin/claudebuzz.js notify done on # 开启“任务完成”通知
-node bin/claudebuzz.js doctor         # 健康检查
+node bin/claudebuzz.js off            # 全局静音（埋头干活/休假时一键关）
+node bin/claudebuzz.js on             # 恢复推送
+node bin/claudebuzz.js quiet 23:00 08:00  # 勿扰时段（支持跨夜，到点自动不推/恢复）
+node bin/claudebuzz.js quiet off      # 关闭勿扰时段
+node bin/claudebuzz.js doctor         # 健康检查（含总开关/勿扰状态）
 ```
 
 ## ⚙️ 配置文件
@@ -59,6 +64,8 @@ node bin/claudebuzz.js doctor         # 健康检查
 
 ```json
 {
+  "enabled": true,
+  "quietHours": { "enabled": false, "start": "23:00", "end": "08:00" },
   "channels": [
     { "type": "bark", "key": "", "server": "https://api.day.app",
       "icon": "https://cdn.jsdelivr.net/gh/hjxccc/agentwatch-assets@main/claude_robot_pink.png",
@@ -70,6 +77,9 @@ node bin/claudebuzz.js doctor         # 健康检查
   "dedupWindowMs": 8000
 }
 ```
+
+- `enabled`：全局总开关，`false` = 完全静默（等同 `claudebuzz off`）。
+- `quietHours`：勿扰时段，`start > end` 视为跨夜（如 `23:00–08:00`）。该时段内不推、过点自动恢复。
 
 想顺带收「任务完成」提醒，把 `notify.onTaskDone` 改成 `true` 即可。
 
@@ -109,8 +119,10 @@ node bin/claudebuzz.js test
 
 ## 🗺️ 路线图
 
-- **v1（当前）**：Claude Code 插件，主打 Bark(iOS / Apple Watch)；安卓兜底 飞书 webhook（另含 PushDeer 可选）；按需推送 + 命令详情 + persona + 去重。
-- **v2**：更多渠道（Telegram / 企业微信 / Server酱）；**手机一键 allow/deny 远程批准**（PreToolUse 决定 + 本地中继）；自建 Bark 服务器引导。
+> **定位**：ClaudeBuzz 专注把「该打扰你的那一刻」推得**及时、准确、信息够用**——是通知器，不是远程遥控器。凡是「手机反过来操作电脑」的方向（一键远程批准、点击跳回终端）我们**刻意不做**：它们都需要双向回路，且一条通知的小窗口看不全要放行什么，盲批等于瞎签字，与单向·零配置·安全的定位相悖。我们只把**出站通知本身**做到极致。
+
+- **v1（当前）**：Claude Code 插件，主打 Bark(iOS / Apple Watch)；安卓兜底 飞书 webhook（另含 PushDeer 可选）；按需推送 + 命令详情 + persona + 去重 + 危险命令升级 + 分事件铃声 + 一键复制命令。
+- **v2（纯出站，把通知做深）**：任务完成摘要增强（耗时/改动文件数）、勿扰时段、角标计数、更多渠道（Telegram / 企业微信 / Server酱）。
 
 ## 🙏 致谢
 
