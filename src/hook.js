@@ -21,7 +21,7 @@ function processEvent(eventName, raw, cfg) {
     persona: cfg.persona,
     detailMaxLen: cfg.detailMaxLen,
   });
-  const dedupKey = `${eventType}|${raw.session_id || ''}|${detail}`;
+  const dedupKey = `${eventType}|${raw.session_id || ''}|${String(detail).slice(0, 80)}`;
   return { eventName, eventType, willSend, detail, msg, dedupKey };
 }
 
@@ -29,10 +29,20 @@ function readStdin() {
   return new Promise((resolve) => {
     if (process.stdin.isTTY) return resolve('');
     let data = '';
+    let done = false;
+    let timer = null;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      if (timer) clearTimeout(timer);
+      resolve(data);
+    };
     process.stdin.setEncoding('utf8');
     process.stdin.on('data', (c) => (data += c));
-    process.stdin.on('end', () => resolve(data));
-    setTimeout(() => resolve(data), 3000); // 安全兜底
+    process.stdin.on('end', finish);
+    process.stdin.on('error', finish);
+    timer = setTimeout(finish, 3000); // 安全兜底
+    if (timer.unref) timer.unref();   // 不阻塞 event loop 自然退出
   });
 }
 
@@ -56,16 +66,20 @@ async function main() {
 
   let notified = false;
   let skipped = '';
-  if (r.willSend) {
-    if (isDuplicate(r.dedupKey, cfg.dedupWindowMs || 8000)) {
-      skipped = 'dedup';
+  try {
+    if (r.willSend) {
+      if (isDuplicate(r.dedupKey, cfg.dedupWindowMs || 8000)) {
+        skipped = 'dedup';
+      } else {
+        const results = await channels.dispatch(cfg.channels, r.msg);
+        notified = results.some((x) => x.ok);
+        if (!notified) skipped = 'send_failed';
+      }
     } else {
-      const results = await channels.dispatch(cfg.channels, r.msg);
-      notified = results.some((x) => x.ok);
-      if (!notified) skipped = 'send_failed';
+      skipped = 'policy';
     }
-  } else {
-    skipped = 'policy';
+  } catch (e) {
+    skipped = 'error:' + e.message;
   }
 
   appendLog({

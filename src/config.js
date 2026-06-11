@@ -39,6 +39,7 @@ function ensureDir() {
 }
 
 function deepMerge(base, over) {
+  if (over === null) return base; // 用户写 null 时回退默认，而非静默置空
   if (Array.isArray(over)) return over;
   if (over && typeof over === 'object') {
     const out = { ...base };

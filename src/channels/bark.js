@@ -24,6 +24,7 @@ function send(ch, msg) {
     try {
       const req = lib.get(url, { timeout: 10000 }, (res) => {
         let data = '';
+        res.on('error', (e) => resolve({ ok: false, info: e.message })); // 响应阶段 socket 错误，避免 Promise 永挂
         res.on('data', (c) => (data += c));
         res.on('end', () => {
           let ok = res.statusCode === 200;

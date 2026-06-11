@@ -75,20 +75,33 @@ function cmdPersona(name) {
   console.log(`✅ persona 已切换为：${name}（${THEME_NAMES[name]}）`);
 }
 
+function channelLabel(ch) {
+  if (ch.type === 'bark') return `bark   key=${ch.key ? maskKey(ch.key) : '⚠️未设置'} @ ${ch.server}`;
+  if (ch.type === 'ntfy') return `ntfy   topic=${ch.topic || '⚠️未设置'} @ ${ch.server || 'https://ntfy.sh'}`;
+  return `${ch.type}`;
+}
+function channelReady(ch) {
+  if (ch.type === 'bark') return !!ch.key;
+  if (ch.type === 'ntfy') return !!ch.topic;
+  return false;
+}
+
 async function cmdDoctor() {
   const cfg = loadConfig();
-  const ch = firstBark(cfg);
+  const list = cfg.channels || [];
   console.log('\n  ClaudeBuzz Doctor');
   console.log(`  配置文件 : ${CONFIG_FILE}`);
   console.log(`  Node     : ${process.version}`);
-  console.log(`  Bark key : ${ch && ch.key ? maskKey(ch.key) : '⚠️ 未设置 —— 运行 claudebuzz config bark <你的URL>'}`);
-  console.log(`  服务器   : ${ch ? ch.server : '-'}`);
   console.log(`  persona  : ${cfg.persona}`);
   console.log(`  推送策略 : permission=${cfg.notify.onPermission} done=${cfg.notify.onTaskDone} attention=${cfg.notify.onAttention}`);
-  if (ch && ch.key) {
-    process.stdout.write('  连通测试 : ');
-    const [r] = await channels.dispatch([ch], buildMessage('info', { detail: 'ClaudeBuzz doctor 自检', persona: 'off' }));
-    console.log(r.ok ? '✅ Bark 可达' : '❌ ' + r.info);
+  if (!list.length) console.log('  渠道     : ⚠️ 未配置任何渠道');
+  for (const ch of list) {
+    console.log(`  渠道     : ${channelLabel(ch)}`);
+    if (channelReady(ch)) {
+      process.stdout.write('  连通测试 : ');
+      const [r] = await channels.dispatch([ch], buildMessage('info', { detail: 'ClaudeBuzz doctor 自检', persona: 'off' }));
+      console.log(r.ok ? `✅ ${ch.type} 可达` : `❌ ${r.info}`);
+    }
   }
   console.log('');
 }

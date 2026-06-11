@@ -10,6 +10,8 @@ const fs = require('fs');
 function readTranscript(tpath) {
   try {
     if (!tpath || !fs.existsSync(tpath)) return [];
+    // 长会话 transcript 可能很大；超过 8MB 直接跳过，避免 hook 进程同步读爆内存。
+    try { if (fs.statSync(tpath).size > 8 * 1024 * 1024) return []; } catch (_) {}
     const out = [];
     for (const line of fs.readFileSync(tpath, 'utf8').split('\n')) {
       const s = line.trim();

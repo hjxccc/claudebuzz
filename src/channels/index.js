@@ -1,11 +1,12 @@
 'use strict';
 // 渠道注册表 + 分发。首发只有 bark；新增渠道（ntfy/telegram/feishu）只需在此注册。
 const bark = require('./bark');
+const ntfy = require('./ntfy');
 
 const REGISTRY = {
-  bark,
-  // ntfy: require('./ntfy'),       // v2
-  // telegram: require('./telegram'),
+  bark, // iOS / Apple Watch
+  ntfy, // 跨平台（安卓 / 桌面 / 自托管）
+  // telegram: require('./telegram'),  // v2
   // feishu: require('./feishu'),
 };
 

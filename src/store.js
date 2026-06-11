@@ -11,7 +11,19 @@ function readState() {
   try { return JSON.parse(fs.readFileSync(STATE_FILE, 'utf8')); } catch (_) { return { recent: {} }; }
 }
 function writeState(s) {
-  try { ensureDir(); fs.writeFileSync(STATE_FILE, JSON.stringify(s), 'utf8'); } catch (_) {}
+  // 原子写：先写临时文件再 rename，避免另一个 hook 进程读到写一半的截断 JSON。
+  try {
+    ensureDir();
+    const tmp = STATE_FILE + '.tmp.' + process.pid;
+    fs.writeFileSync(tmp, JSON.stringify(s), 'utf8');
+    try {
+      fs.renameSync(tmp, STATE_FILE);
+    } catch (_) {
+      // Windows 上目标已存在时 rename 可能 EPERM → 降级为直接覆盖
+      fs.writeFileSync(STATE_FILE, JSON.stringify(s), 'utf8');
+      try { fs.unlinkSync(tmp); } catch (_) {}
+    }
+  } catch (_) {}
 }
 
 // 同一 key 在 windowMs 内重复出现 → 判定为重复，返回 true（应跳过）。

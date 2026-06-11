@@ -13,7 +13,7 @@ ClaudeBuzz 让它在需要你的那一刻**主动震你手腕**，还告诉你�
 - **零配置安装**：作为 Claude Code 插件分发，`/plugin install` 后 hook 自动注册，**无需手动改 `settings.json`**。
 - **只在该打扰时打扰**：默认**只在需要你授权时**推送，任务进度、普通事件一律静默。
 - **带真实命令详情**：通知正文直接显示它要执行的命令（`Bash: git push…` / `rm -rf…`），扫一眼就知道该不该放行。
-- **走苹果官方推送**：经 [Bark](https://github.com/Finb/Bark) → 苹果 APNs → iPhone → Apple Watch，稳定省电。
+- **iOS 与安卓都支持**：iPhone 走 [Bark](https://github.com/Finb/Bark)（→ 苹果 APNs → Apple Watch）；安卓走 [ntfy](https://ntfy.sh)（开源、有官方安卓 App、可自托管）。
 - **话术可换**：内置 `coolie`(牛马版) / `cute`(可爱版) / `boss`(总裁版) / `emperor` / `palace`，一条命令切换。
 - **跨平台 · 零依赖**：纯 Node.js 内置模块，Windows / macOS / Linux 通吃，原生 UTF-8，无 GBK 乱码坑。
 
@@ -65,10 +65,29 @@ node bin/claudebuzz.js doctor        # 健康检查
 
 想顺带收「任务完成」提醒，把 `notify.onTaskDone` 改成 `true` 即可。
 
+### 📱 安卓用户（ntfy）
+
+我们用的 Bark 是 **iOS 专属**（依赖苹果 APNs，没有安卓版）。安卓请用 [ntfy](https://ntfy.sh)——开源、有官方安卓 App、可自托管，思路和 Bark 一样：
+
+1. 手机装 **ntfy** App（Google Play / F-Droid），订阅一个你自己起的 topic（如 `my-claude-xyz`，建议随机难猜）。
+2. 把 `channels` 换成 ntfy：
+
+```json
+{
+  "channels": [
+    { "type": "ntfy", "server": "https://ntfy.sh", "topic": "my-claude-xyz",
+      "priority": 4,
+      "icon": "https://cdn.jsdelivr.net/gh/hjxccc/agentwatch-assets@main/claude_robot_pink.png" }
+  ]
+}
+```
+
+也可以 Bark + ntfy **同时配**（数组里放两个），iPhone 和安卓一起收。自托管 ntfy 时把 `server` 改成你的地址、用 `token` 字段带鉴权。
+
 ## 🗺️ 路线图
 
-- **v1（当前）**：Claude Code 插件 + Bark 推送 + 按需推送 + 命令详情 + persona + 去重。
-- **v2**：多渠道（ntfy / Telegram / 飞书 / Server酱）；**手机一键 allow/deny 远程批准**（PreToolUse 决定 + 本地中继）；自建 Bark 服务器引导。
+- **v1（当前）**：Claude Code 插件 + Bark(iOS) / ntfy(安卓·跨平台) 双渠道 + 按需推送 + 命令详情 + persona + 去重。
+- **v2**：更多渠道（Telegram / 飞书 / Server酱）；**手机一键 allow/deny 远程批准**（PreToolUse 决定 + 本地中继）；自建 Bark/ntfy 服务器引导。
 
 ## 🙏 致谢
 

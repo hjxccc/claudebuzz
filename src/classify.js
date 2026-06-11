@@ -37,8 +37,10 @@ function classify(eventName, raw) {
       return 'info';
     }
     case 'PostToolUse': {
-      const txt = JSON.stringify(raw).toLowerCase();
-      if (/error|failed|exception|traceback|non-zero|exit code/.test(txt)) return 'failure';
+      // 只看结构化字段，避免对可能很大的 tool_output 做全量序列化。
+      const err = String(raw.error || raw.stderr || '');
+      const code = raw.exit_code;
+      if (err || (typeof code === 'number' && code !== 0)) return 'failure';
       return 'info';
     }
     default:
