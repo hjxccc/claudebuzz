@@ -8,6 +8,12 @@ const DANGER_KEYWORDS = [
   'chmod', 'chown', 'dd ', 'mkfs', 'killall', ':(){', 'shutdown', 'reboot',
 ];
 
+// 文本里是否含危险操作关键词（命令详情也走这条，故 permission 请求执行 rm -rf 也能被升级）。
+function isDangerText(text) {
+  const t = String(text || '').toLowerCase();
+  return DANGER_KEYWORDS.some((k) => t.includes(k));
+}
+
 function toolText(raw) {
   const ti = raw.tool_input || {};
   return [raw.tool_name, ti.command, ti.file_path, ti.url, ti.path]
@@ -48,4 +54,4 @@ function classify(eventName, raw) {
   }
 }
 
-module.exports = { classify, DANGER_KEYWORDS };
+module.exports = { classify, isDangerText, DANGER_KEYWORDS };

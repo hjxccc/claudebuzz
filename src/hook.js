@@ -3,7 +3,7 @@
 // 流程：分类 → 策略(是否要推) → 提取详情 → 组装消息 → 去重 → 发送渠道。永远 exit 0，绝不拖垮 Claude Code。
 
 const { loadConfig } = require('./config');
-const { classify } = require('./classify');
+const { classify, isDangerText } = require('./classify');
 const { shouldSend } = require('./policy');
 const { extractDetail } = require('./detail');
 const { buildMessage } = require('./message');
@@ -16,10 +16,15 @@ function processEvent(eventName, raw, cfg) {
   const eventType = classify(eventName, raw);
   const willSend = shouldSend(eventType, cfg.notify);
   const detail = extractDetail(eventType, raw);
+  // 危险判定看命令文本：哪怕是“请求允许执行 rm -rf”这类 permission 事件，也升级推送。
+  const isDanger = eventType === 'danger' || isDangerText(detail);
   const msg = buildMessage(eventType, {
     detail,
     persona: cfg.persona,
     detailMaxLen: cfg.detailMaxLen,
+    isDanger,
+    sounds: cfg.sounds,
+    dangerCue: cfg.danger,
   });
   const dedupKey = `${eventType}|${raw.session_id || ''}|${String(detail).slice(0, 80)}`;
   return { eventName, eventType, willSend, detail, msg, dedupKey };

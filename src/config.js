@@ -33,6 +33,15 @@ const DEFAULTS = {
   persona: 'coolie',
   detailMaxLen: 45,
   dedupWindowMs: 8000,
+  // 分事件铃声（Bark sound 参数；留空用内置默认）。可填 Bark 支持的铃声名。
+  sounds: {
+    permission_required: 'shake',
+    task_done: 'birdsong',
+    failure: 'minuet',
+    danger: 'alarm',
+  },
+  // 危险命令升级推送：检测 rm -rf / push --force 等 → critical 突破静音 + 重复响铃 + 🚨 图标。
+  danger: { level: 'critical', call: true, icon: 'danger' },
 };
 
 function ensureDir() {

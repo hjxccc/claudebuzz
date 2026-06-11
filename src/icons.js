@@ -5,6 +5,7 @@ const PRESETS = {
   'robot-gray': 'https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji@latest/color/618x618/1F916.png',
   'claude': 'https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/light/claude-color.png',
   'bell': 'https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji@latest/color/618x618/1F514.png',
+  'danger': 'https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji@latest/color/618x618/1F6A8.png', // 🚨 危险命令专属
 };
 
 function resolveIcon(value) {
