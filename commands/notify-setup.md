@@ -15,16 +15,16 @@ description: 配置 ClaudeBuzz —— 按 iPhone / 安卓分流引导，配好�
 1. 让用户去 App Store 装 **Bark**（免费开源），打开后复制首页那条推送地址（形如 `https://api.day.app/XXXXXX/`）。
 2. 写入：`node "${CLAUDE_PLUGIN_ROOT}/bin/claudebuzz.js" config bark "<用户粘贴内容>"`
 
-## 分支 B：安卓（用 ntfy）
+## 分支 B：安卓（兜底方案，飞书 webhook）
 
-1. 让用户装 **ntfy** App（任选）：
-   - Google Play: https://play.google.com/store/apps/details?id=io.heckel.ntfy
-   - F-Droid: https://f-droid.org/en/packages/io.heckel.ntfy/
-   - APK: https://github.com/binwiederhier/ntfy-android/releases
-2. 让用户在 App 里**订阅一个自己起的 topic**（建议随机难猜，如 `claudebuzz-x7k9q2`；公共服务器上 topic 名就是密码）。
-3. 写入：`node "${CLAUDE_PLUGIN_ROOT}/bin/claudebuzz.js" config ntfy "<topic>"`
+先跟用户说清楚：**ClaudeBuzz 主打 iPhone / Apple Watch，安卓不是主场景**。国产 ROM（vivo/小米/OPPO/华为）会激进杀后台，独立推送 App 常漏收；飞书作为办公 IM 长期常驻、消息基本必达，所以安卓**只提供飞书 webhook 这一条兜底路**。
 
-> 用户两个平台都想收，可以两条都配（Bark + ntfy 会同时推）。
+1. 让用户在飞书里建一个群（一个人也行）→ 群设置 → **群机器人 → 添加机器人 → 自定义机器人** → 复制 **Webhook 地址**（形如 `https://open.feishu.cn/open-apis/bot/v2/hook/xxxx`）。
+2. 安全设置任选一种：勾「自定义关键词」（如 `ClaudeBuzz`）或开「签名校验」拿到 secret。
+3. 写入：`node "${CLAUDE_PLUGIN_ROOT}/bin/claudebuzz.js" config feishu "<webhook>"`
+   - 若开了签名校验：`... config feishu "<webhook>" "<secret>"`
+
+> 用户两个平台都想收，可以多条都配（Bark + 飞书会同时推）。
 
 ---
 

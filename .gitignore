@@ -4,3 +4,6 @@ node_modules/
 # 本地运行产生的状态/日志（不入库）
 state.json
 events.jsonl
+# Trellis 项目管理脚手架 + 个人 journal（对开源用户无用，不入库）
+.trellis/
+.claude/

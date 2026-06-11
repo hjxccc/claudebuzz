@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-// ClaudeBuzz 终端 CLI：配置 Bark/ntfy、发测试、切 persona/图标、开关通知类型、体检。
+// ClaudeBuzz 终端 CLI：配置 Bark(主)/飞书/PushDeer、发测试、切 persona/图标、开关通知类型、体检。
 // /notify-setup slash 命令底层也调它。
 
 const { loadConfig, saveConfig, CONFIG_FILE } = require('../src/config');
@@ -40,18 +40,17 @@ function parseBark(value) {
   return { server: null, key: value };
 }
 
-// 解析 ntfy 输入：完整 URL（https://ntfy.sh/topic）或裸 topic。
-function parseNtfy(value) {
+// 解析 PushDeer 输入：裸 pushkey，或含 pushkey= 的完整 URL。
+function parsePushdeer(value) {
   value = String(value || '').trim();
   if (!value) throw new Error('输入为空');
   if (/^https?:\/\//i.test(value)) {
     const u = new URL(value);
-    const seg = u.pathname.split('/').filter(Boolean);
-    if (!seg.length) throw new Error('URL 里解析不到 topic');
-    return { server: `${u.protocol}//${u.host}`, topic: seg[0] };
+    const k = u.searchParams.get('pushkey');
+    if (!k) throw new Error('URL 里没有 pushkey 参数');
+    return { server: `${u.protocol}//${u.host}`, key: k };
   }
-  if (!/^[A-Za-z0-9_-]+$/.test(value)) throw new Error('topic 只能含字母数字和 _-');
-  return { server: null, topic: value };
+  return { server: null, key: value };
 }
 
 function upsertChannel(cfg, type, props) {
@@ -73,26 +72,43 @@ function cmdConfigBark(arg) {
   console.log(`   运行 'claudebuzz test' 验证。`);
 }
 
-function cmdConfigNtfy(arg) {
+function cmdConfigFeishu(webhook, secret) {
   const cfg = loadConfig();
-  const { server, topic } = parseNtfy(arg);
-  const ch = upsertChannel(cfg, 'ntfy', server ? { topic, server } : { topic });
-  if (!ch.server) ch.server = 'https://ntfy.sh';
-  if (!ch.priority) ch.priority = 4;
-  if (!ch.icon) ch.icon = 'robot-pink';
+  webhook = String(webhook || '').trim();
+  if (!/^https?:\/\//i.test(webhook)) throw new Error('请粘贴飞书机器人的完整 Webhook 地址（https://open.feishu.cn/...）');
+  const props = { webhook };
+  if (secret) props.secret = secret; // 启用了“签名校验”时传第二个参数
+  upsertChannel(cfg, 'feishu', props);
   saveConfig(cfg);
-  console.log(`✅ ntfy 已配置：topic=${topic} @ ${ch.server}`);
-  console.log(`   手机 ntfy App 订阅该 topic，然后运行 'claudebuzz test' 验证。`);
+  console.log(`✅ 飞书已配置：${webhook.slice(0, 48)}...`);
+  if (!secret) console.log('   提示：若机器人开了“签名校验”，请：claudebuzz config feishu <webhook> <secret>');
+  console.log(`   运行 'claudebuzz test' 验证。`);
 }
 
-async function cmdTest() {
+function cmdConfigPushdeer(arg) {
   const cfg = loadConfig();
+  const { server, key } = parsePushdeer(arg);
+  const ch = upsertChannel(cfg, 'pushdeer', server ? { key, server } : { key });
+  if (!ch.server) ch.server = 'https://api2.pushdeer.com';
+  saveConfig(cfg);
+  console.log(`✅ PushDeer 已配置：${maskKey(key)} @ ${ch.server}`);
+  console.log(`   运行 'claudebuzz test' 验证。`);
+}
+
+async function cmdTest(kind) {
+  const cfg = loadConfig();
+  const danger = kind === 'danger';
   const msg = buildMessage('permission_required', {
-    detail: 'Bash: git push origin main  （测试）',
+    detail: danger ? 'Bash: rm -rf /tmp/build  （危险测试）' : 'Bash: npm install  （测试）',
     persona: cfg.persona,
     detailMaxLen: cfg.detailMaxLen,
+    isDanger: danger,
+    sounds: cfg.sounds,
+    dangerCue: cfg.danger,
   });
-  console.log(`发送测试：${msg.title} / ${msg.body}`);
+  const cueInfo = msg.cue.danger ? ` [🚨升级 level=${msg.cue.level} call=on sound=${msg.cue.sound}]`
+    : msg.cue.sound ? ` [sound=${msg.cue.sound}]` : '';
+  console.log(`发送测试：${msg.title} / ${msg.body}${cueInfo}`);
   if (!cfg.channels || !cfg.channels.length) return console.log('⚠️ 未配置任何渠道');
   const results = await channels.dispatch(cfg.channels, msg);
   for (const r of results) console.log(`  [${r.type}] ${r.ok ? '✅ 成功' : '❌ ' + r.info}`);
@@ -147,12 +163,14 @@ function cmdNotify(type, state) {
 
 function channelLabel(ch) {
   if (ch.type === 'bark') return `bark   key=${ch.key ? maskKey(ch.key) : '⚠️未设置'} @ ${ch.server}`;
-  if (ch.type === 'ntfy') return `ntfy   topic=${ch.topic || '⚠️未设置'} @ ${ch.server || 'https://ntfy.sh'}`;
+  if (ch.type === 'pushdeer') return `pushdeer key=${ch.key ? maskKey(ch.key) : '⚠️未设置'} @ ${ch.server || 'https://api2.pushdeer.com'}`;
+  if (ch.type === 'feishu') return `feishu webhook=${ch.webhook ? ch.webhook.slice(0, 40) + '…' : '⚠️未设置'}${ch.secret ? ' (签名)' : ''}`;
   return `${ch.type}`;
 }
 function channelReady(ch) {
   if (ch.type === 'bark') return !!ch.key;
-  if (ch.type === 'ntfy') return !!ch.topic;
+  if (ch.type === 'pushdeer') return !!ch.key;
+  if (ch.type === 'feishu') return !!ch.webhook;
   return false;
 }
 
@@ -179,9 +197,10 @@ async function cmdDoctor() {
 
 function usage() {
   console.log(`ClaudeBuzz CLI
-  claudebuzz config bark <Bark URL 或 key>     配置 Bark（iPhone）
-  claudebuzz config ntfy <topic 或 ntfy URL>   配置 ntfy（安卓/跨平台）
-  claudebuzz test                              发送测试推送
+  claudebuzz config bark <Bark URL 或 key>     配置 Bark（iPhone / Apple Watch，主打）
+  claudebuzz config feishu <webhook> [secret]  配置飞书机器人（安卓兜底）
+  claudebuzz config pushdeer <pushkey>         配置 PushDeer（开源 Bark 替代，可选）
+  claudebuzz test [danger]                     发送测试推送（danger=危险命令升级演示）
   claudebuzz persona [主题]                    查看/切换话术
   claudebuzz icon [预设名或URL]                查看/切换图标（${presetNames().join('/')}）
   claudebuzz notify [类型] [on|off]            查看/开关通知类型
@@ -193,8 +212,9 @@ async function main() {
   const [cmd, a, b, ...rest] = process.argv.slice(2);
   try {
     if (cmd === 'config' && a === 'bark') cmdConfigBark(b);
-    else if (cmd === 'config' && a === 'ntfy') cmdConfigNtfy(b);
-    else if (cmd === 'test') await cmdTest();
+    else if (cmd === 'config' && a === 'pushdeer') cmdConfigPushdeer(b);
+    else if (cmd === 'config' && a === 'feishu') cmdConfigFeishu(b, rest[0]);
+    else if (cmd === 'test') await cmdTest(a);
     else if (cmd === 'persona') cmdPersona(a);
     else if (cmd === 'icon') cmdIcon(a);
     else if (cmd === 'notify') cmdNotify(a, b);
